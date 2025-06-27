@@ -17,7 +17,7 @@ use crate::common::operation_error::{OperationError, OperationResult};
 use crate::data_types::primitive::PrimitiveVectorElement;
 use crate::data_types::vectors::{DenseVector, MultiDenseVectorInternal, QueryVector};
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::Distance;
 use crate::vector_storage::common::VECTOR_READ_BATCH_SIZE;
 use crate::vector_storage::query_scorer::QueryScorer;
@@ -199,6 +199,7 @@ where
     EuclidMetric: Metric<TElement>,
     DotProductMetric: Metric<TElement>,
     ManhattanMetric: Metric<TElement>,
+    HammingMetric: Metric<TElement>,
 {
     match vector_storage.distance() {
         Distance::Cosine => new_scorer_with_metric::<TElement, CosineMetric, _>(
@@ -217,6 +218,11 @@ where
             hardware_counter,
         ),
         Distance::Manhattan => new_scorer_with_metric::<TElement, ManhattanMetric, _>(
+            query,
+            vector_storage,
+            hardware_counter,
+        ),
+        Distance::Hamming => new_scorer_with_metric::<TElement, HammingMetric, _>(
             query,
             vector_storage,
             hardware_counter,
@@ -302,6 +308,7 @@ where
     EuclidMetric: Metric<TElement>,
     DotProductMetric: Metric<TElement>,
     ManhattanMetric: Metric<TElement>,
+    HammingMetric: Metric<TElement>,
 {
     match vector_storage.distance() {
         Distance::Cosine => new_multi_scorer_with_metric::<_, CosineMetric, _>(
@@ -320,6 +327,11 @@ where
             hardware_counter,
         ),
         Distance::Manhattan => new_multi_scorer_with_metric::<_, ManhattanMetric, _>(
+            query,
+            vector_storage,
+            hardware_counter,
+        ),
+        Distance::Hamming => new_multi_scorer_with_metric::<_, HammingMetric, _>(
             query,
             vector_storage,
             hardware_counter,

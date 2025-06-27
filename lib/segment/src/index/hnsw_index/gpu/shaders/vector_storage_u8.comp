@@ -71,6 +71,15 @@ uint manhattan_u8vec4(u8vec4 v1, u8vec4 v2) {
 #define VECTOR_STORAGE_SCORE_ELEMENT(a, b) manhattan_u8vec4(a, b)
 #define VECTOR_STORAGE_POSTPROCESS_SCORE(RESULT) -float(subgroupAdd(RESULT))
 
+#ifdef HAMMING_DISTANCE
+uint hamming_u8vec4(u8vec4 v1, u8vec4 v2) {
+    u8vec4 diff = v1 ^ v2;
+    return bitCount(diff.x) + bitCount(diff.y) + bitCount(diff.z) + bitCount(diff.w);
+}
+
+#define VECTOR_STORAGE_SCORE_ELEMENT(a, b) hamming_u8vec4(a, b)
+#define VECTOR_STORAGE_POSTPROCESS_SCORE(RESULT) -float(subgroupAdd(RESULT))
+
 #endif
 
 #endif

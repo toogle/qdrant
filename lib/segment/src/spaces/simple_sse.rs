@@ -107,6 +107,54 @@ pub(crate) unsafe fn manhattan_similarity_sse(
 }
 
 #[target_feature(enable = "sse")]
+pub(crate) unsafe fn hamming_similarity_sse(
+    v1: &[VectorElementType],
+    v2: &[VectorElementType],
+) -> ScoreType {
+    unsafe {
+        let n = v1.len();
+        let m = n - (n % 16);
+        let mut ptr1: *const f32 = v1.as_ptr();
+        let mut ptr2: *const f32 = v2.as_ptr();
+        let mut count128_1: __m128 = _mm_setzero_ps();
+        let mut count128_2: __m128 = _mm_setzero_ps();
+        let mut count128_3: __m128 = _mm_setzero_ps();
+        let mut count128_4: __m128 = _mm_setzero_ps();
+        let ones = _mm_set1_ps(1.0);
+
+        let mut i: usize = 0;
+        while i < m {
+            let cmp1 = _mm_cmpneq_ps(_mm_loadu_ps(ptr1), _mm_loadu_ps(ptr2));
+            count128_1 = _mm_add_ps(count128_1, _mm_and_ps(cmp1, ones));
+
+            let cmp2 = _mm_cmpneq_ps(_mm_loadu_ps(ptr1.add(4)), _mm_loadu_ps(ptr2.add(4)));
+            count128_2 = _mm_add_ps(count128_2, _mm_and_ps(cmp2, ones));
+
+            let cmp3 = _mm_cmpneq_ps(_mm_loadu_ps(ptr1.add(8)), _mm_loadu_ps(ptr2.add(8)));
+            count128_3 = _mm_add_ps(count128_3, _mm_and_ps(cmp3, ones));
+
+            let cmp4 = _mm_cmpneq_ps(_mm_loadu_ps(ptr1.add(12)), _mm_loadu_ps(ptr2.add(12)));
+            count128_4 = _mm_add_ps(count128_4, _mm_and_ps(cmp4, ones));
+
+            ptr1 = ptr1.add(16);
+            ptr2 = ptr2.add(16);
+            i += 16;
+        }
+
+        let mut result = hsum128_ps_sse(count128_1)
+            + hsum128_ps_sse(count128_2)
+            + hsum128_ps_sse(count128_3)
+            + hsum128_ps_sse(count128_4);
+        for i in 0..n - m {
+            if *ptr1.add(i) != *ptr2.add(i) {
+                result += 1.0;
+            }
+        }
+        -result
+    }
+}
+
+#[target_feature(enable = "sse")]
 pub(crate) unsafe fn cosine_preprocess_sse(vector: DenseVector) -> DenseVector {
     unsafe {
         let n = vector.len();
@@ -228,6 +276,10 @@ mod tests {
             let manhattan_simd = unsafe { manhattan_similarity_sse(&v1, &v2) };
             let manhattan = manhattan_similarity(&v1, &v2);
             assert_eq!(manhattan_simd, manhattan);
+
+            let hamming_simd = unsafe { hamming_similarity_sse(&v1, &v2) };
+            let hamming = hamming_similarity(&v1, &v2);
+            assert_eq!(hamming_simd, hamming);
 
             let dot_simd = unsafe { dot_similarity_sse(&v1, &v2) };
             let dot = dot_similarity(&v1, &v2);

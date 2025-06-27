@@ -37,7 +37,7 @@ use crate::index::field_index::CardinalityEstimation;
 use crate::index::sparse_index::sparse_index_config::SparseIndexConfig;
 use crate::json_path::JsonPath;
 use crate::spaces::metric::MetricPostProcessing;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::utils::maybe_arc::MaybeArc;
 
 pub type PayloadKeyType = JsonPath;
@@ -272,6 +272,8 @@ pub enum Distance {
     Dot,
     // <https://simple.wikipedia.org/wiki/Manhattan_distance>
     Manhattan,
+    // <https://en.wikipedia.org/wiki/Hamming_distance>
+    Hamming,
 }
 
 impl Distance {
@@ -281,13 +283,14 @@ impl Distance {
             Distance::Euclid => EuclidMetric::postprocess(score),
             Distance::Dot => DotProductMetric::postprocess(score),
             Distance::Manhattan => ManhattanMetric::postprocess(score),
+            Distance::Hamming => HammingMetric::postprocess(score),
         }
     }
 
     pub fn distance_order(&self) -> Order {
         match self {
             Distance::Cosine | Distance::Dot => Order::LargeBetter,
-            Distance::Euclid | Distance::Manhattan => Order::SmallBetter,
+            Distance::Euclid | Distance::Manhattan | Distance::Hamming => Order::SmallBetter,
         }
     }
 

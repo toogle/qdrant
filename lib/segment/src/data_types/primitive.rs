@@ -10,7 +10,7 @@ use super::named_vectors::CowMultiVector;
 use super::vectors::TypedMultiDenseVector;
 use crate::data_types::vectors::{VectorElementType, VectorElementTypeByte, VectorElementTypeHalf};
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::{Distance, QuantizationConfig, VectorStorageDatatype};
 
 pub trait PrimitiveVectorElement:
@@ -175,6 +175,9 @@ impl PrimitiveVectorElement for VectorElementTypeByte {
                 }
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementType>>::preprocess(vector)
+                }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementType>>::preprocess(vector)
                 }
             };
             Cow::from(preprocessed_vector)

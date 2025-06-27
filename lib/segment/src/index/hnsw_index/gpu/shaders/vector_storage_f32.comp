@@ -29,4 +29,15 @@ float manhattan_metric_f32(vec4 v1, vec4 v2) {
 #define VECTOR_STORAGE_SCORE_ELEMENT(a, b) manhattan_metric_f32(a, b)
 #endif
 
+#ifdef HAMMING_DISTANCE
+float hamming_metric_f32(vec4 v1, vec4 v2) {
+    uvec4 bits1 = floatBitsToUint(v1);
+    uvec4 bits2 = floatBitsToUint(v2);
+    uvec4 diff = bits1 ^ bits2;
+    uint hamming_dist = bitCount(diff.x) + bitCount(diff.y) + bitCount(diff.z) + bitCount(diff.w);
+    return float(-hamming_dist);
+}
+#define VECTOR_STORAGE_SCORE_ELEMENT(a, b) hamming_metric_f32(a, b)
+#endif
+
 #endif

@@ -8,7 +8,7 @@ use super::query_scorer::custom_query_scorer::CustomQueryScorer;
 use crate::common::operation_error::{OperationError, OperationResult};
 use crate::data_types::vectors::{DenseVector, QueryVector, VectorElementType, VectorInternal};
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::Distance;
 use crate::vector_storage::dense::memmap_dense_vector_storage::MemmapDenseVectorStorage;
 use crate::vector_storage::dense::mmap_dense_vectors::MmapDenseVectors;
@@ -96,6 +96,7 @@ impl<'a> AsyncRawScorerBuilder<'a> {
             Distance::Euclid => self._build_with_metric::<EuclidMetric>(),
             Distance::Dot => self._build_with_metric::<DotProductMetric>(),
             Distance::Manhattan => self._build_with_metric::<ManhattanMetric>(),
+            Distance::Hamming => self._build_with_metric::<HammingMetric>(),
         }
     }
 

@@ -1063,8 +1063,9 @@ impl QuantizedVectors {
                 Distance::Euclid => quantization::DistanceType::L2,
                 Distance::Dot => quantization::DistanceType::Dot,
                 Distance::Manhattan => quantization::DistanceType::L1,
+                Distance::Hamming => quantization::DistanceType::L1,
             },
-            invert: distance == Distance::Euclid || distance == Distance::Manhattan,
+            invert: distance == Distance::Euclid || distance == Distance::Manhattan || distance == Distance::Hamming,
         }
     }
 

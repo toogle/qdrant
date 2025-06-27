@@ -13,21 +13,28 @@ use segment::spaces::metric_f16::avx::dot::avx_dot_similarity_half;
 use segment::spaces::metric_f16::avx::euclid::avx_euclid_similarity_half;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_f16::avx::manhattan::avx_manhattan_similarity_half;
+#[cfg(target_arch = "x86_64")]
+use segment::spaces::metric_f16::avx::hamming::avx_hamming_similarity_half;
 #[cfg(target_arch = "aarch64")]
 use segment::spaces::metric_f16::neon::dot::neon_dot_similarity_half;
 #[cfg(target_arch = "aarch64")]
 use segment::spaces::metric_f16::neon::euclid::neon_euclid_similarity_half;
 #[cfg(target_arch = "aarch64")]
 use segment::spaces::metric_f16::neon::manhattan::neon_manhattan_similarity_half;
+#[cfg(target_arch = "aarch64")]
+use segment::spaces::metric_f16::neon::hamming::neon_hamming_similarity_half;
 use segment::spaces::metric_f16::simple_dot::dot_similarity_half;
 use segment::spaces::metric_f16::simple_euclid::euclid_similarity_half;
 use segment::spaces::metric_f16::simple_manhattan::manhattan_similarity_half;
+use segment::spaces::metric_f16::simple_hamming::hamming_similarity_half;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_f16::sse::dot::sse_dot_similarity_half;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_f16::sse::euclid::sse_euclid_similarity_half;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_f16::sse::manhattan::sse_manhattan_similarity_half;
+#[cfg(target_arch = "x86_64")]
+use segment::spaces::metric_f16::sse::hamming::sse_hamming_similarity_half;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_uint::avx2::cosine::avx_cosine_similarity_bytes;
 #[cfg(target_arch = "x86_64")]
@@ -36,6 +43,8 @@ use segment::spaces::metric_uint::avx2::dot::avx_dot_similarity_bytes;
 use segment::spaces::metric_uint::avx2::euclid::avx_euclid_similarity_bytes;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_uint::avx2::manhattan::avx_manhattan_similarity_bytes;
+#[cfg(target_arch = "x86_64")]
+use segment::spaces::metric_uint::avx2::hamming::avx_hamming_similarity_bytes;
 #[cfg(target_arch = "aarch64")]
 use segment::spaces::metric_uint::neon::cosine::neon_cosine_similarity_bytes;
 #[cfg(target_arch = "aarch64")]
@@ -44,10 +53,13 @@ use segment::spaces::metric_uint::neon::dot::neon_dot_similarity_bytes;
 use segment::spaces::metric_uint::neon::euclid::neon_euclid_similarity_bytes;
 #[cfg(target_arch = "aarch64")]
 use segment::spaces::metric_uint::neon::manhattan::neon_manhattan_similarity_bytes;
+#[cfg(target_arch = "aarch64")]
+use segment::spaces::metric_uint::neon::hamming::neon_hamming_similarity_bytes;
 use segment::spaces::metric_uint::simple_cosine::cosine_similarity_bytes;
 use segment::spaces::metric_uint::simple_dot::dot_similarity_bytes;
 use segment::spaces::metric_uint::simple_euclid::euclid_similarity_bytes;
 use segment::spaces::metric_uint::simple_manhattan::manhattan_similarity_bytes;
+use segment::spaces::metric_uint::simple_hamming::hamming_similarity_bytes;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_uint::sse2::cosine::sse_cosine_similarity_bytes;
 #[cfg(target_arch = "x86_64")]
@@ -56,7 +68,9 @@ use segment::spaces::metric_uint::sse2::dot::sse_dot_similarity_bytes;
 use segment::spaces::metric_uint::sse2::euclid::sse_euclid_similarity_bytes;
 #[cfg(target_arch = "x86_64")]
 use segment::spaces::metric_uint::sse2::manhattan::sse_manhattan_similarity_bytes;
-use segment::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+#[cfg(target_arch = "x86_64")]
+use segment::spaces::metric_uint::sse2::hamming::sse_hamming_similarity_bytes;
+use segment::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 
 const DIM: usize = 1024;
 const COUNT: usize = 100_000;
@@ -256,6 +270,52 @@ fn byte_metrics_bench(c: &mut Criterion) {
             neon_manhattan_similarity_bytes(&random_vectors_1[i], &random_vectors_2[i])
         });
     });
+
+    group.bench_function("byte-hamming", |b| {
+        let mut i = 0;
+        b.iter(|| {
+            i = (i + 1) % COUNT;
+            <HammingMetric as Metric<VectorElementTypeByte>>::similarity(
+                &random_vectors_1[i],
+                &random_vectors_2[i],
+            )
+        });
+    });
+
+    group.bench_function("byte-hamming-no-simd", |b| {
+        let mut i = 0;
+        b.iter(|| {
+            i = (i + 1) % COUNT;
+            hamming_similarity_bytes(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "x86_64")]
+    group.bench_function("byte-hamming-avx", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            avx_hamming_similarity_bytes(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "x86_64")]
+    group.bench_function("byte-hamming-sse", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            sse_hamming_similarity_bytes(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "aarch64")]
+    group.bench_function("byte-hamming-neon", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            neon_hamming_similarity_bytes(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
 }
 
 fn half_metrics_bench(c: &mut Criterion) {
@@ -413,6 +473,52 @@ fn half_metrics_bench(c: &mut Criterion) {
         b.iter(|| unsafe {
             i = (i + 1) % COUNT;
             neon_manhattan_similarity_half(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    group.bench_function("half-hamming", |b| {
+        let mut i = 0;
+        b.iter(|| {
+            i = (i + 1) % COUNT;
+            <HammingMetric as Metric<VectorElementTypeHalf>>::similarity(
+                &random_vectors_1[i],
+                &random_vectors_2[i],
+            )
+        });
+    });
+
+    group.bench_function("half-hamming-no-simd", |b| {
+        let mut i = 0;
+        b.iter(|| {
+            i = (i + 1) % COUNT;
+            hamming_similarity_half(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "x86_64")]
+    group.bench_function("half-hamming-avx", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            avx_hamming_similarity_half(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "x86_64")]
+    group.bench_function("half-hamming-sse", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            sse_hamming_similarity_half(&random_vectors_1[i], &random_vectors_2[i])
+        });
+    });
+
+    #[cfg(target_arch = "aarch64")]
+    group.bench_function("half-hamming-neon", |b| {
+        let mut i = 0;
+        b.iter(|| unsafe {
+            i = (i + 1) % COUNT;
+            neon_hamming_similarity_half(&random_vectors_1[i], &random_vectors_2[i])
         });
     });
 }

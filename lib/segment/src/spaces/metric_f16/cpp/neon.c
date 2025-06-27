@@ -134,4 +134,46 @@ float32_t manhattanDist_half_4x4(const float16_t* pSrcA, const float16_t* pSrcB,
 
     return manhattanDistance;
 }
+
+float32_t hammingDist_half_4x4(const float16_t* pSrcA, const float16_t* pSrcB, uint32_t blockSize)
+{
+    float32_t hammingDistance = 0.0f;
+    uint16x8_t count1 = vdupq_n_u16(0);
+    uint16x8_t count2 = vdupq_n_u16(0);
+    uint16x8_t count3 = vdupq_n_u16(0);
+    uint16x8_t count4 = vdupq_n_u16(0);
+    uint32_t i = 0;
+
+    for(i=0; i < blockSize - (blockSize % 32); i+=32)
+    {
+        count1 = vaddq_u16(count1, vmvnq_u16(vceqq_f16(vld1q_f16(pSrcA), vld1q_f16(pSrcB))));
+        count2 = vaddq_u16(count2, vmvnq_u16(vceqq_f16(vld1q_f16(pSrcA+8), vld1q_f16(pSrcB+8))));
+        count3 = vaddq_u16(count3, vmvnq_u16(vceqq_f16(vld1q_f16(pSrcA+16), vld1q_f16(pSrcB+16))));
+        count4 = vaddq_u16(count4, vmvnq_u16(vceqq_f16(vld1q_f16(pSrcA+24), vld1q_f16(pSrcB+24))));
+
+        pSrcA += 32;
+        pSrcB += 32;
+    }
+
+    uint32x4_t sum = vmovl_u16(vget_low_u16(count1));
+    sum = vaddq_u32(sum, vmovl_u16(vget_high_u16(count1)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_low_u16(count2)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_high_u16(count2)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_low_u16(count3)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_high_u16(count3)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_low_u16(count4)));
+    sum = vaddq_u32(sum, vmovl_u16(vget_high_u16(count4)));
+
+    hammingDistance = (float32_t)vaddvq_u32(sum);
+
+    for (i=0; i < (blockSize % 32); i++) {
+        if (vabsh_f16(*pSrcA - *pSrcB) > 1e-6f) {
+            hammingDistance += 1.0f;
+        }
+        pSrcA += 1;
+        pSrcB += 1;
+    }
+
+    return hammingDistance;
+}
 #endif

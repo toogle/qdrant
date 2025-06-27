@@ -2330,6 +2330,7 @@ impl TryFrom<Distance> for segment::types::Distance {
             Distance::Euclid => segment::types::Distance::Euclid,
             Distance::Dot => segment::types::Distance::Dot,
             Distance::Manhattan => segment::types::Distance::Manhattan,
+            Distance::Hamming => segment::types::Distance::Hamming,
         })
     }
 }

@@ -155,7 +155,8 @@
         "Cosine",
         "Euclid",
         "Dot",
-        "Manhattan"
+        "Manhattan",
+				"Hamming"
       ]
     },
     "Indexes": {

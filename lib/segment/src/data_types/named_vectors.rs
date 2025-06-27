@@ -11,7 +11,7 @@ use super::vectors::{
 };
 use crate::common::operation_error::OperationError;
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::{Distance, VectorDataConfig, VectorName, VectorNameBuf, VectorStorageDatatype};
 
 type CowKey<'a> = Cow<'a, VectorName>;
@@ -370,6 +370,9 @@ impl<'a> NamedVectors<'a> {
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementType>>::preprocess(dense_vector)
                 }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementType>>::preprocess(dense_vector)
+                }
             },
             Some(VectorStorageDatatype::Uint8) => match config.distance {
                 Distance::Cosine => {
@@ -384,6 +387,9 @@ impl<'a> NamedVectors<'a> {
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementTypeByte>>::preprocess(dense_vector)
                 }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementTypeByte>>::preprocess(dense_vector)
+                }
             },
             Some(VectorStorageDatatype::Float16) => match config.distance {
                 Distance::Cosine => {
@@ -397,6 +403,9 @@ impl<'a> NamedVectors<'a> {
                 }
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementTypeHalf>>::preprocess(dense_vector)
+                }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementTypeHalf>>::preprocess(dense_vector)
                 }
             },
         }

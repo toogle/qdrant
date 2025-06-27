@@ -2,6 +2,7 @@ pub mod simple_cosine;
 pub mod simple_dot;
 pub mod simple_euclid;
 pub mod simple_manhattan;
+pub mod simple_hamming;
 
 #[cfg(target_arch = "x86_64")]
 pub mod avx2;

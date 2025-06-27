@@ -1920,6 +1920,7 @@ Note: 1kB = 1 vector of size 256. |
 | Euclid | 2 |  |
 | Dot | 3 |  |
 | Manhattan | 4 |  |
+| Hamming | 5 |  |
 
 
 

@@ -33,6 +33,9 @@ pub struct EuclidMetric;
 #[derive(Clone)]
 pub struct ManhattanMetric;
 
+#[derive(Clone)]
+pub struct HammingMetric;
+
 impl Metric<VectorElementType> for EuclidMetric {
     fn distance() -> Distance {
         Distance::Euclid
@@ -116,6 +119,50 @@ impl Metric<VectorElementType> for ManhattanMetric {
 }
 
 impl MetricPostProcessing for ManhattanMetric {
+    fn postprocess(score: ScoreType) -> ScoreType {
+        score.abs()
+    }
+}
+
+impl Metric<VectorElementType> for HammingMetric {
+    fn distance() -> Distance {
+        Distance::Hamming
+    }
+
+    fn similarity(v1: &[VectorElementType], v2: &[VectorElementType]) -> ScoreType {
+        #[cfg(target_arch = "x86_64")]
+        {
+            if is_x86_feature_detected!("avx")
+                && is_x86_feature_detected!("fma")
+                && v1.len() >= MIN_DIM_SIZE_AVX
+            {
+                return unsafe { hamming_similarity_avx(v1, v2) };
+            }
+        }
+
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            if is_x86_feature_detected!("sse") && v1.len() >= MIN_DIM_SIZE_SIMD {
+                return unsafe { hamming_similarity_sse(v1, v2) };
+            }
+        }
+
+        #[cfg(all(target_arch = "aarch64", target_feature = "neon"))]
+        {
+            if std::arch::is_aarch64_feature_detected!("neon") && v1.len() >= MIN_DIM_SIZE_SIMD {
+                return unsafe { hamming_similarity_neon(v1, v2) };
+            }
+        }
+
+        hamming_similarity(v1, v2)
+    }
+
+    fn preprocess(vector: DenseVector) -> DenseVector {
+        vector
+    }
+}
+
+impl MetricPostProcessing for HammingMetric {
     fn postprocess(score: ScoreType) -> ScoreType {
         score.abs()
     }
@@ -222,6 +269,13 @@ pub fn manhattan_similarity(v1: &[VectorElementType], v2: &[VectorElementType]) 
     -v1.iter()
         .zip(v2)
         .map(|(a, b)| (a - b).abs())
+        .sum::<ScoreType>()
+}
+
+pub fn hamming_similarity(v1: &[VectorElementType], v2: &[VectorElementType]) -> ScoreType {
+    -v1.iter()
+        .zip(v2)
+        .map(|(a, b)| if (a - b).abs() < VectorElementType::EPSILON { 0.0 } else { 1.0 })
         .sum::<ScoreType>()
 }
 

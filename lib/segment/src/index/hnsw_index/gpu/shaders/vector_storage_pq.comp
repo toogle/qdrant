@@ -47,6 +47,12 @@ float score_pq(u8vec4 a, u8vec4 b, uint i) {
 #ifdef MANHATTAN_DISTANCE
             score -= abs(data_a - data_b);
 #endif
+
+#ifdef HAMMING_DISTANCE
+            uint bits_a = floatBitsToUint(data_a);
+            uint bits_b = floatBitsToUint(data_b);
+            score -= float(bitCount(bits_a ^ bits_b));
+#endif
         }
     }
     return score;

@@ -6861,7 +6861,8 @@
           "Cosine",
           "Euclid",
           "Dot",
-          "Manhattan"
+          "Manhattan",
+          "Hamming"
         ]
       },
       "HnswConfigDiff": {

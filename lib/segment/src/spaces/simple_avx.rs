@@ -116,6 +116,54 @@ pub(crate) unsafe fn manhattan_similarity_avx(
 
 #[target_feature(enable = "avx")]
 #[target_feature(enable = "fma")]
+pub(crate) unsafe fn hamming_similarity_avx(
+    v1: &[VectorElementType],
+    v2: &[VectorElementType],
+) -> ScoreType {
+    unsafe {
+        let n = v1.len();
+        let m = n - (n % 32);
+        let mut ptr1: *const f32 = v1.as_ptr();
+        let mut ptr2: *const f32 = v2.as_ptr();
+        let mut sum256_1: __m256 = _mm256_setzero_ps();
+        let mut sum256_2: __m256 = _mm256_setzero_ps();
+        let mut sum256_3: __m256 = _mm256_setzero_ps();
+        let mut sum256_4: __m256 = _mm256_setzero_ps();
+        let ones: __m256 = _mm256_set1_ps(1.0);
+        let mut i: usize = 0;
+        while i < m {
+            let cmp256_1: __m256 = _mm256_cmp_ps(_mm256_loadu_ps(ptr1), _mm256_loadu_ps(ptr2), _CMP_NEQ_OQ);
+            sum256_1 = _mm256_add_ps(_mm256_and_ps(cmp256_1, ones), sum256_1);
+
+            let cmp256_2: __m256 = _mm256_cmp_ps(_mm256_loadu_ps(ptr1.add(8)), _mm256_loadu_ps(ptr2.add(8)), _CMP_NEQ_OQ);
+            sum256_2 = _mm256_add_ps(_mm256_and_ps(cmp256_2, ones), sum256_2);
+
+            let cmp256_3: __m256 = _mm256_cmp_ps(_mm256_loadu_ps(ptr1.add(16)), _mm256_loadu_ps(ptr2.add(16)), _CMP_NEQ_OQ);
+            sum256_3 = _mm256_add_ps(_mm256_and_ps(cmp256_3, ones), sum256_3);
+
+            let cmp256_4: __m256 = _mm256_cmp_ps(_mm256_loadu_ps(ptr1.add(24)), _mm256_loadu_ps(ptr2.add(24)), _CMP_NEQ_OQ);
+            sum256_4 = _mm256_add_ps(_mm256_and_ps(cmp256_4, ones), sum256_4);
+
+            ptr1 = ptr1.add(32);
+            ptr2 = ptr2.add(32);
+            i += 32;
+        }
+
+        let mut result = hsum256_ps_avx(sum256_1)
+            + hsum256_ps_avx(sum256_2)
+            + hsum256_ps_avx(sum256_3)
+            + hsum256_ps_avx(sum256_4);
+        for i in 0..n - m {
+            if *ptr1.add(i) != *ptr2.add(i) {
+                result += 1.0;
+            }
+        }
+        -result
+    }
+}
+
+#[target_feature(enable = "avx")]
+#[target_feature(enable = "fma")]
 pub(crate) unsafe fn cosine_preprocess_avx(vector: DenseVector) -> DenseVector {
     unsafe {
         let n = vector.len();
@@ -239,6 +287,10 @@ mod tests {
             let manhattan_simd = unsafe { manhattan_similarity_avx(&v1, &v2) };
             let manhattan = manhattan_similarity(&v1, &v2);
             assert_eq!(manhattan_simd, manhattan);
+
+            let hamming_simd = unsafe { hamming_similarity_avx(&v1, &v2) };
+            let hamming = hamming_similarity(&v1, &v2);
+            assert_eq!(hamming_simd, hamming);
 
             let dot_simd = unsafe { dot_similarity_avx(&v1, &v2) };
             let dot = dot_similarity(&v1, &v2);

@@ -48,4 +48,14 @@ VECTOR_STORAGE_SCORE_TYPE manhattan_u8vec4(u8vec4 a, u8vec4 b) {
 #define VECTOR_STORAGE_SCORE_ELEMENT(a, b) manhattan_u8vec4(a, b)
 #endif
 
+#ifdef HAMMING_DISTANCE
+
+VECTOR_STORAGE_SCORE_TYPE hamming_u8vec4(u8vec4 a, u8vec4 b) {
+    u8vec4 diff = a ^ b;
+    return bitCount(diff.x) + bitCount(diff.y) + bitCount(diff.z) + bitCount(diff.w);
+}
+
+#define VECTOR_STORAGE_SCORE_ELEMENT(a, b) hamming_u8vec4(a, b)
+#endif
+
 #endif

@@ -11,7 +11,7 @@ use crate::data_types::vectors::{
     VectorElementTypeHalf,
 };
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::{Distance, QuantizationConfig, VectorStorageDatatype};
 use crate::vector_storage::quantized::quantized_multi_custom_query_scorer::QuantizedMultiCustomQueryScorer;
 use crate::vector_storage::quantized::quantized_multi_query_scorer::QuantizedMultiQueryScorer;
@@ -61,6 +61,9 @@ impl<'a> QuantizedScorerBuilder<'a> {
                 Distance::Manhattan => {
                     self.build_with_metric::<VectorElementType, ManhattanMetric>()
                 }
+                Distance::Hamming => {
+                    self.build_with_metric::<VectorElementType, HammingMetric>()
+                }
             },
             VectorStorageDatatype::Uint8 => match self.distance {
                 Distance::Cosine => self.build_with_metric::<VectorElementTypeByte, CosineMetric>(),
@@ -71,6 +74,9 @@ impl<'a> QuantizedScorerBuilder<'a> {
                 Distance::Manhattan => {
                     self.build_with_metric::<VectorElementTypeByte, ManhattanMetric>()
                 }
+                Distance::Hamming => {
+                    self.build_with_metric::<VectorElementTypeByte, HammingMetric>()
+                }
             },
             VectorStorageDatatype::Float16 => match self.distance {
                 Distance::Cosine => self.build_with_metric::<VectorElementTypeHalf, CosineMetric>(),
@@ -80,6 +86,9 @@ impl<'a> QuantizedScorerBuilder<'a> {
                 }
                 Distance::Manhattan => {
                     self.build_with_metric::<VectorElementTypeHalf, ManhattanMetric>()
+                }
+                Distance::Hamming => {
+                    self.build_with_metric::<VectorElementTypeHalf, HammingMetric>()
                 }
             },
         }

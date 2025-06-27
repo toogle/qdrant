@@ -16,7 +16,7 @@ use crate::fixtures::index_fixtures::random_vector;
 use crate::fixtures::payload_fixtures::random_dense_byte_vector;
 use crate::index::hnsw_index::gpu::shader_builder::ShaderBuilder;
 use crate::spaces::metric::Metric;
-use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use crate::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use crate::types::{
     BinaryQuantization, BinaryQuantizationConfig, BinaryQuantizationEncoding, Distance,
     ProductQuantization, ProductQuantizationConfig, QuantizationConfig, ScalarQuantization,
@@ -75,6 +75,12 @@ impl TestStorageType {
 )]
 #[case::manhattan_f32(
     Distance::Manhattan,
+    TestStorageType::Dense(TestElementType::Float32),
+    273,
+    2057
+)]
+#[case::hamming_f32(
+    Distance::Hamming,
     TestStorageType::Dense(TestElementType::Float32),
     273,
     2057
@@ -168,6 +174,13 @@ fn test_gpu_vector_storage_sq(
 )]
 #[case::manhattan_f32_two_bits(
     Distance::Manhattan,
+    TestStorageType::Dense(TestElementType::Float32),
+    273,
+    2057,
+    BinaryQuantizationEncoding::TwoBits
+)]
+#[case::hamming_f32_two_bits(
+    Distance::Hamming,
     TestStorageType::Dense(TestElementType::Float32),
     273,
     2057,
@@ -268,6 +281,12 @@ fn test_gpu_vector_storage_bq(
     17,
     2057
 )]
+#[case::hamming_f32(
+    Distance::Hamming,
+    TestStorageType::Dense(TestElementType::Float32),
+    17,
+    2057
+)]
 #[case::large_dimension(
     Distance::Cosine,
     TestStorageType::Dense(TestElementType::Float32),
@@ -353,6 +372,12 @@ fn test_gpu_vector_storage_pq(
 )]
 #[case::manhattan_f32(
     Distance::Manhattan,
+    TestStorageType::Dense(TestElementType::Float32),
+    273,
+    2057
+)]
+#[case::hamming_f32(
+    Distance::Hamming,
     TestStorageType::Dense(TestElementType::Float32),
     273,
     2057
@@ -512,6 +537,7 @@ fn get_precision(storage_type: TestStorageType, dim: usize, distance: Distance) 
         Distance::Dot => 0.01,
         Distance::Euclid => dim as f32 * 0.001,
         Distance::Manhattan => dim as f32 * 0.001,
+        Distance::Hamming => dim as f32 * 0.001,
     };
     match storage_type.element_type() {
         TestElementType::Float32 => distance_persision,
@@ -567,6 +593,7 @@ fn create_vector_storage_f32(
             Distance::Euclid => <EuclidMetric as Metric<VectorElementType>>::preprocess(vec),
             Distance::Dot => <DotProductMetric as Metric<VectorElementType>>::preprocess(vec),
             Distance::Manhattan => <ManhattanMetric as Metric<VectorElementType>>::preprocess(vec),
+            Distance::Hamming => <HammingMetric as Metric<VectorElementType>>::preprocess(vec),
         };
         let vec_ref = VectorRef::from(&vec);
         vector_storage
@@ -595,6 +622,9 @@ fn create_vector_storage_f16(
             Distance::Manhattan => {
                 <ManhattanMetric as Metric<VectorElementTypeHalf>>::preprocess(vec)
             }
+            Distance::Hamming => {
+                <HammingMetric as Metric<VectorElementTypeHalf>>::preprocess(vec)
+            }
         };
         let vec_ref = VectorRef::from(&vec);
         vector_storage
@@ -622,6 +652,9 @@ fn create_vector_storage_u8(
             Distance::Dot => <DotProductMetric as Metric<VectorElementTypeByte>>::preprocess(vec),
             Distance::Manhattan => {
                 <ManhattanMetric as Metric<VectorElementTypeByte>>::preprocess(vec)
+            }
+            Distance::Hamming => {
+                <HammingMetric as Metric<VectorElementTypeByte>>::preprocess(vec)
             }
         };
         let vec_ref = VectorRef::from(&vec);
@@ -660,6 +693,9 @@ fn create_vector_storage_f32_multi(
                 Distance::Dot => <DotProductMetric as Metric<VectorElementType>>::preprocess(vec),
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementType>>::preprocess(vec)
+                }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementType>>::preprocess(vec)
                 }
             };
             vectors.extend(vec);
@@ -708,6 +744,9 @@ fn create_vector_storage_f16_multi(
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementTypeHalf>>::preprocess(vec)
                 }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementTypeHalf>>::preprocess(vec)
+                }
             };
             vectors.extend(vec);
         }
@@ -754,6 +793,9 @@ fn create_vector_storage_u8_multi(
                 }
                 Distance::Manhattan => {
                     <ManhattanMetric as Metric<VectorElementTypeByte>>::preprocess(vec)
+                }
+                Distance::Hamming => {
+                    <HammingMetric as Metric<VectorElementTypeByte>>::preprocess(vec)
                 }
             };
             vectors.extend(vec);

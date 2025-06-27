@@ -109,6 +109,9 @@ impl ShaderBuilderParameters for GpuVectorStorage {
             Distance::Manhattan => {
                 defines.insert("MANHATTAN_DISTANCE".to_owned(), None);
             }
+            Distance::Hamming => {
+                defines.insert("HAMMING_DISTANCE".to_owned(), None);
+            }
         }
 
         if let Some(quantization) = &self.quantization {

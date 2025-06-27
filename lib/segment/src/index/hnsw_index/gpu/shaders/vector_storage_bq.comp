@@ -32,4 +32,8 @@ float bq_postprocess_score(uint result) {
 #define VECTOR_STORAGE_SCORE_ELEMENT(a, b) bitCount(a ^ b)
 #endif
 
+#ifdef HAMMING_DISTANCE
+#define VECTOR_STORAGE_SCORE_ELEMENT(a, b) bitCount(a ^ b)
+#endif
+
 #endif

@@ -21,7 +21,7 @@ use segment::payload_json;
 use segment::segment_constructor::VectorIndexBuildArgs;
 use segment::segment_constructor::simple_segment_constructor::build_simple_segment;
 use segment::spaces::metric::Metric;
-use segment::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric};
+use segment::spaces::simple::{CosineMetric, DotProductMetric, EuclidMetric, ManhattanMetric, HammingMetric};
 use segment::types::{
     Condition, Distance, FieldCondition, Filter, HnswConfig, HnswGlobalConfig, MultiVectorConfig,
     PayloadSchemaType, SeqNumberType,
@@ -80,6 +80,9 @@ fn test_single_multi_and_dense_hnsw_equivalency() {
             }
             Distance::Manhattan => {
                 <ManhattanMetric as Metric<VectorElementType>>::preprocess(vector.clone())
+            }
+            Distance::Hamming => {
+                <HammingMetric as Metric<VectorElementType>>::preprocess(vector.clone())
             }
         };
         let vector_multi = MultiDenseVectorInternal::new(preprocessed_vector, vector.len());
